@@ -21,7 +21,7 @@ int avGrid[AV_GRID_SIZE] = {0};
 
 
 Color blockColors[9] = {    
-    (Color){0,0,0,0}, //empty 0
+    (Color){255,125,0,255}, //empty 0
     (Color){0,0,0,255}, //black 1
     (Color){255,0,0,255}, //red 2
     (Color){0,255,0,255}, //green 3 
@@ -43,17 +43,16 @@ int blockDropCache = 30;
 int recursiveCount = 0;
 
 
-void spawnBlock(){
-	int col = GetRandomValue(0,9);
-	if (avGrid[col] != 0) return;
-	avGrid[col] = GetRandomValue(1,(sizeof(blockColors)/sizeof(int))-1);
-	blockDropCache--;
-}
+#define BLOCK_PARTICLE_COUNT 20
+#define BLOCK_PARTICLE_CACHE_COUNT 6
+ParticlePoint blockEffectCache[BLOCK_PARTICLE_CACHE_COUNT][BLOCK_PARTICLE_COUNT];
+int blockEffectCacheIndex = 0;
+
 bool isValidCoordinate(int x, int y) {
 	return x >= 0 && x < AV_GRID_WIDTH && y >= 0 && y <= AV_GRID_HEIGHT;
 }
 
-bool hasAirGap(int index){
+bool hasAirGap(const int index){
 	
 	int row = index / AV_GRID_WIDTH;
 	int steps = AV_GRID_HEIGHT - row;
@@ -68,11 +67,29 @@ bool hasAirGap(int index){
 	}
 	return false;
 }
-bool isFalling(int index){
+bool isFalling(const int index){
 	int bIndex = index+AV_GRID_WIDTH;
 	return (bIndex < AV_GRID_SIZE && avGrid[bIndex] == 0);
 }
-void checkMatch(int index, int val){
+
+void blockEffectExplode(int cacheIndex, int val, int gridIndex){
+	
+	int x = gridIndex % AV_GRID_WIDTH * 50+25;
+	int y = gridIndex / AV_GRID_WIDTH * 50+25;
+	
+    for(int j = 0; j < BLOCK_PARTICLE_COUNT; j++){
+        blockEffectCache[cacheIndex][j].position = (Vector2){x,y};
+        Vector2 vel = (Vector2){GetRandomFloatRange(-2,2),GetRandomFloatRange(-2,2)};
+		blockEffectCache[cacheIndex][j].lifetime = GetRandomFloatRange(0.2f,0.8f);
+        blockEffectCache[cacheIndex][j].lifetime = GetRandomFloatRange(0.5f,1.0f);
+        blockEffectCache[cacheIndex][j].timestamp = GetTime();
+        if(blockEffectCache[cacheIndex][j].velocity.x == 0) blockEffectCache[cacheIndex][j].velocity.x = 1;
+        if(blockEffectCache[cacheIndex][j].velocity.y == 0) blockEffectCache[cacheIndex][j].velocity.y = 1;
+    }
+    blockEffectCacheIndex= (blockEffectCacheIndex+1) % 5;
+}
+
+void checkMatch(const int index, const int val){
 	if(recursiveCount > 100){
 		printf("RECURSION TOO BIG!!");
 		exit(1);
@@ -124,20 +141,29 @@ void checkMatch(int index, int val){
 	
 	if(match){	
 		blockDropCache+=2;
-		PlaySound(blockMatchSound);
+		blockEffectExplode(blockEffectCacheIndex,val,index);
 		//printf("checking i %i v %i\n",cacheIndex, val);
 		//recursiveCount++;
 		//checkMatch(cacheIndex, val);
 	} 
 }
-
+void spawnBlock(){
+	int col = GetRandomValue(0,9);
+	if(!hasAirGap(col)){
+		printf("\nGAMEN OVER");
+		exit(1);
+	}
+	if (avGrid[col] != 0) return;
+	avGrid[col] = GetRandomValue(1,(sizeof(blockColors)/sizeof(int))-1);
+	blockDropCache--;
+}
 static Texture2D setupAvalancheBG(const int sizeX,const int sizeY){
     RenderTexture2D avalancheT = LoadRenderTexture(sizeX, sizeY);
     BeginTextureMode(avalancheT);
     
-	blockMatchSound = LoadSound("../res/audio/blockstackclear.wav");
-	blockChainSound = LoadSound("../res/audio/chainclear.wav");
-	blockLandSound = LoadSound("../res/audio/blockland.wav");
+	blockMatchSound = LoadSound("../res/audio/blockstackclear.ogg");
+	blockChainSound = LoadSound("../res/audio/chainclear.ogg");
+	blockLandSound = LoadSound("../res/audio/blockland.ogg");
     
     ClearBackground(WHITE);
     for (int x = 0; x <= sizeX; x += CELL_SIZE) {
@@ -147,8 +173,24 @@ static Texture2D setupAvalancheBG(const int sizeX,const int sizeY){
     return avalancheT.texture;
 }
 
+void initBlockCache(){
+	for(int i = 0; i < BLOCK_PARTICLE_CACHE_COUNT; i++){	
+		for(int j = 0; j < BLOCK_PARTICLE_COUNT; j++){
+			blockEffectCache[i][j].position = (Vector2){5,5};
+			Vector2 vel = (Vector2){GetRandomFloatRange(-5,5),GetRandomFloatRange(-5,5)};
+			blockEffectCache[i][j].velocity = Vector2Scale(vel,100);
+			blockEffectCache[i][j].lifetime = GetRandomFloatRange(0.2f,0.8f);
+			blockEffectCache[i][j].timestamp = GetTime();
+			if(blockEffectCache[i][j].velocity.x == 0) blockEffectCache[i][j].velocity.x = 1;
+			if(blockEffectCache[i][j].velocity.y == 0) blockEffectCache[i][j].velocity.y = 1;
+		}
+	}
+}
+
+
 void initAvalanche(){
 	avalancheBG = setupAvalancheBG(500, 900);
+	initBlockCache();
 	//for (int i = 0; i < 10; i++) {
 		//avGrid[i] = 2;
 	//}
@@ -162,7 +204,6 @@ void updateRow(const int row){
 		if(avGrid[i] == 0) continue;
 		
 		checkMatch(i, avGrid[i]);
-		if(recursiveCount > 1) printf("==REC %i\n",recursiveCount); 
 		
 		int below = i + AV_GRID_WIDTH;
 		if( avGrid[below] == 0){
@@ -174,6 +215,14 @@ void updateRow(const int row){
 			}
 		}
 		
+	}
+	if(recursiveCount > 1) printf("==REC %i\n",recursiveCount); 
+	if(recursiveCount > 0){
+		if(recursiveCount > 1){
+			PlaySound(blockChainSound);
+		}else{
+			PlaySound(blockMatchSound);
+		} 
 	}
 }
 void updateScreen(){
@@ -192,7 +241,7 @@ void updateAvalanche(){
 	blockDropTimer++;
 	
 	if(blockDropCache > 0){		
-		if(blockDropTimer > 20){
+		if(blockDropTimer > 0){
 			blockDropTimer = 0;
 			spawnBlock();
 			//avGrid[5] = 2;
@@ -210,7 +259,7 @@ void updateAvalanche(){
 	
 	framec++;
 	
-	if(framec > 10){	//replace with delta and step
+	if(framec > 0){	//replace with delta and step
 		updateScreen();
 		framec = 0;
 	}
@@ -252,12 +301,13 @@ void updateAvalanche(){
 		//DrawRectangle(i*50,0,50,900,(Color){0,255,0,50});
 	//}
 	for (int i = 0; i < AV_GRID_SIZE; i++) {
+		if(avGrid[i] == 0) continue;
 		int gridX = i % AV_GRID_WIDTH;
 		int gridY = i / AV_GRID_WIDTH;
 		DrawRectangle(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE, CELL_SIZE, blockColors[avGrid[i]]);
 		//DrawRectangleLines(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK);
 		//DrawText(TextFormat("%i", avGrid[i]), gridX * CELL_SIZE+25, gridY * CELL_SIZE+25, 20, ORANGE);
-		DrawText(TextFormat("%i", i), gridX * CELL_SIZE+25, gridY * CELL_SIZE+25, 20, ORANGE);
+		//DrawText(TextFormat("%i", i), gridX * CELL_SIZE+25, gridY * CELL_SIZE+25, 20, ORANGE);
 		
 	}	
 
@@ -268,6 +318,16 @@ void updateAvalanche(){
 		DrawRectangle(x*CELL_SIZE, mousePos.y*CELL_SIZE, CELL_SIZE, CELL_SIZE,blockColors[avGrid[mouseGridIndex]]);
 		//DrawRectangle(columnIndex*CELL_SIZE, mousePos.y*CELL_SIZE, CELL_SIZE, CELL_SIZE, Fade(blockColors[avGrid[mouseGridIndex]], 0.4f));
 	}	
+	for(int i = 0; i < BLOCK_PARTICLE_CACHE_COUNT; i++){	
+		if(true) continue;
+		for(int j = 0; j < BLOCK_PARTICLE_COUNT; j++){
+			blockEffectCache[i][j].position =  Vector2Add(blockEffectCache[i][j].position, Vector2Scale(blockEffectCache[i][j].velocity, .01));
+			DrawRectangle(blockEffectCache[i][j].position.x, blockEffectCache[i][j].position.y, 5,5,RED);
+			if(GetTime() - blockEffectCache[i][j].timestamp > blockEffectCache[i][j].lifetime){
+				//blockEffectCache[i][j].velocity = Vector2Zero();
+			}
+		}
+	}
 	
 		//DrawText(TextFormat("mousegrid %i", mouseGridIndex),20,20,20,RED);
 	DrawLine(0,850,AV_GRID_WIDTH*CELL_SIZE,850,BLACK);

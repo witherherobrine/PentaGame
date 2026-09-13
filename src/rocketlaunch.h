@@ -43,6 +43,8 @@ typedef struct Star{
     Vector2 position;
     float speed;
 }Star;
+
+//garbonzo. find a cleaner solution
 typedef struct ParticlePoint{
     Vector2 position;
     Vector2 velocity;
@@ -53,18 +55,13 @@ typedef struct ParticlePoint{
 Rocket rocket;
 static Texture2D rocketTexture;
 static Texture2D gridTexture;
-
-
 ParticlePoint explosion[EXPLOSION_PARTICLE_COUNT];
 ParticlePoint trail[TRAIL_PARTICLE_COUNT];
-
 Star stars[100];
-    
 Sound rocketLaunch;
 Sound rocketExplode;
 
 
-//shareable grid
 //6*18
 #define RL_GRID_WIDTH (GAME_WIDTH/CELL_SIZE)
 #define RL_GRID_HEIGHT (GAME_HEIGHT/CELL_SIZE)
@@ -74,6 +71,7 @@ const int CELL_SIZE = 50;
 const int ROCKET_H_WIDTH = 25;
 const int ROCKET_H_HEIGHT = 25;
 
+//wait which one of these do i need
 Texture2D setupGrid(){
     RenderTexture2D gridTexture = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
     BeginTextureMode(gridTexture);
@@ -91,10 +89,13 @@ Texture2D setupGrid(){
     return gridTexture.texture;
 }
 
+//literally do not need this
 Rocket craftRocket(){
         Rocket r = {0};        
         return r;
 }
+
+//gen texture instead of rendering lines
 void getRocketTexture(Texture2D * tex){
         
         int x = 25; 
@@ -120,8 +121,8 @@ void getRocketTexture(Texture2D * tex){
     *tex = rocketTexture.texture;
 }
 
-//test
-int getRocketHitPrediction(int* grid, int column, int width, int height, int direction) {
+//remove grid, width, height
+int getRocketHitPrediction(int* grid, const int column, int width, int height, const int direction) {
     if (column < 0 || column >= width) return -1; // Safety check!
 
     if (direction == 1) { // Moving Down
@@ -137,7 +138,8 @@ int getRocketHitPrediction(int* grid, int column, int width, int height, int dir
     return -1;
 }
 
-void setupRocket(int column, int dir, Rocket* r){
+//remove rocket
+void setupRocket(const int column, const int dir, Rocket* r){
     r->position.x = column*50 + 25;
     r->position.y = (dir == -1? 910 : -10);
     r->active = true;
@@ -145,9 +147,11 @@ void setupRocket(int column, int dir, Rocket* r){
     r->speed = ROCKET_SPEED;
 }
 
-float GetRandomFloatRange(float min, float max) {
+float GetRandomFloatRange(const float min, const float max) {
     return min + ((float)rand() / (float)RAND_MAX) * (max - min);
 }
+
+//remove stars
 void setupStars(Star* stars){
     for(int i = 0; i < 100; i++){
         stars[i].position = (Vector2){GetRandomFloatRange(0,GAME_WIDTH),GetRandomFloatRange(0,GAME_HEIGHT)};
@@ -156,7 +160,9 @@ void setupStars(Star* stars){
 }
 
 //explosion for rocket (on explode)
-void setupExplosion(ParticlePoint* p, int x, int y){
+//remove p
+//replace xy with index
+void setupExplosion(ParticlePoint* p, const int x, const int y){
     for(int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++){
         p[i].position = (Vector2){x,y};
         Vector2 vel = (Vector2){GetRandomFloatRange(-5,5),GetRandomFloatRange(-5,5)};
@@ -168,7 +174,8 @@ void setupExplosion(ParticlePoint* p, int x, int y){
     }
 }
 //trail for rocket (init)
-void setupTrail(ParticlePoint* p, int x, int y, int dir){
+//remove p
+void setupTrail(ParticlePoint* p, const int x, const int y, const int dir){
     for(int i = 0; i < TRAIL_PARTICLE_COUNT; i++){
         p[i].position = (Vector2){x,y};
         p[i].velocity = Vector2Zero();
@@ -182,6 +189,8 @@ void setupTrail(ParticlePoint* p, int x, int y, int dir){
 }
 
 //ai place blocks
+//replace grid
+//replace size with height
 void setupAiDefense(int* grid, int size){
     for(int i = 0; i < 8; i++){
         int index = GetRandomValue(0,(size/2)-1);
@@ -198,8 +207,8 @@ void initRocketLaunch(){
 	getRocketTexture(&rocketTexture);    
 	rocket = craftRocket();
 	gridTexture = setupGrid(); //get tex
-	rocketLaunch = LoadSound("../res/audio/rocketlaunch.wav");
-	rocketExplode = LoadSound("../res/audio/rocketexplode.wav");
+	rocketLaunch = LoadSound("../res/audio/rocketlaunch.ogg");
+	rocketExplode = LoadSound("../res/audio/rocketexplode.ogg");
 	setupTrail(&trail[0],200,200,1);
 	setupExplosion(&explosion[0],-1000,-1000);
 	setupStars(&stars[0]);
@@ -212,6 +221,7 @@ void resetRocketLaunch(){
 }
 
 //update
+//remove now delta framedelta
 void updateRocketLaunch(double now, double delta, float frameDelta){
 			
 	ClearBackground(BLACK);
@@ -221,6 +231,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 	mousePos.y = ((int)mousePos.y / 50);
 	
 	//rocket
+	//lets clean some yea?
 	int angle = rocket.direction == -1? 0 : 180;
 	rocket.position.y += (rocket.speed * rocket.direction) * frameDelta;
 	Rectangle sourceRec = { 0.0f, 0.0f, (float)rocketTexture.width, (float)rocketTexture.height };
@@ -252,7 +263,9 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 		}
 	}
 	
-	
+	//wut da heckkkkkkkkkkkkkk
+	//i dont NEED a switch if its a bool essentially. make better?
+	//try to cut this nonsensical code duplication
 	switch(turnStyle){
 		case 0:
 		
@@ -332,23 +345,23 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 	
 	}
 
-	
+	//reset grid and game stuffs
 	if(!rocket.active && attackCount == 0 && defenseCount == 8){
 		memset(rlGrid, 0, sizeof(rlGrid));
 		defenseCount = 0;
 		attackCount = 2;
-		turnStyle = (turnStyle == 0? 1:0);
+		turnStyle = (turnStyle == 0? 1:0); //turnstyle can honestly be a bool
 	}
 	
 	//stars
 	for(int i = 0; i < 100; i++){
-		//stars[i].position.x = (int)(stars[i].position.x + stars[i].speed) % GAME_WIDTH;
 		float newX = stars[i].position.x + (stars[i].speed * frameDelta);
 		stars[i].position.x = fmodf(newX, (float)GAME_WIDTH);
 		DrawRectangle(stars[i].position.x, stars[i].position.y, 2,2,WHITE);
 	}
 
 	//draw color squares (defense, hit, etc)
+	//use avalanche render to make this simpler
 	for (int i = 0; i < RL_GRID_SIZE; i++) {
 		int gridX = i % RL_GRID_WIDTH;
 		int gridY = i / RL_GRID_WIDTH;
@@ -367,6 +380,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 		}
 	}
 
+	//this not great. need a better idea
 	for(int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++){
 		explosion[i].position = Vector2Add(explosion[i].position, Vector2Scale(explosion[i].velocity, frameDelta));
 		if(now - explosion[i].timestamp > explosion[i].lifetime){
@@ -375,6 +389,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 		if(explosion[i].velocity.x != 0) DrawRectangle(explosion[i].position.x, explosion[i].position.y, 5,5,ROCKET_COLOR);
 	}
 	
+	//y dis here of all places
 	trail[count].position = (Vector2){rocket.position.x,rocket.position.y-(30*rocket.direction)};
 	count = (count + 1) % TRAIL_PARTICLE_COUNT;
 	
@@ -385,6 +400,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 		}
 	}
 	
+	//UI
 	DrawTexture(gridTexture, 0, 0, GRID_COLOR);
 	DrawText(TextFormat("LIVES: %i", aiLives), 10,10, 30, WHITE);
 	DrawText(TextFormat("att: %i", attackCount), 10,50, 20, WHITE);

@@ -11,6 +11,7 @@
 #include "consts.h"
 #include "rocketlaunch.h"
 #include "avalanche.h"
+#include "pathbreaker.h"
 
 
 void initMainMenu(){
@@ -26,9 +27,15 @@ void startRocketLaunch(){
 void startAvalanche(){
 	SetWindowSize(500,900);
 	SetWindowTitle("Avalanche");
-	//initAvalanche();
 	CURRENT_GAME = AVALANCHE;
 }
+void startPathBreaker(){
+	SetWindowSize(1000,900);
+	SetWindowTitle("Path Breaker");
+	CURRENT_GAME = PATHBREAKER;
+}
+
+//ffmpeg -i rocketlaunch.wav -ac 1 -ar 22050 -b:a 32k -af silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse rocketlaunch.ogg
 
 int main(void){   
     
@@ -40,6 +47,7 @@ int main(void){
     initMainMenu();
 	initRocketLaunch();
 	initAvalanche();
+	initPathBreaker();
     double delta = 0;
     double now = 0;
     bool needInit = false;
@@ -53,6 +61,9 @@ int main(void){
 		}
         if(IsKeyPressed(KEY_THREE)){
 			startAvalanche();
+		}
+        if(IsKeyPressed(KEY_FOUR)){
+			startPathBreaker();
 		}
         now = GetTime();
         delta = now - lastTime;
@@ -69,6 +80,9 @@ int main(void){
 				break;
 			case AVALANCHE:
 				updateAvalanche();
+				break;
+			case PATHBREAKER:
+				updatePathBreaker();
 				break;
 		}
         EndDrawing();
