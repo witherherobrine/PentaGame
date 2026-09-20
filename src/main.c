@@ -8,11 +8,23 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "consts.h"
 #include "rocketlaunch.h"
 #include "avalanche.h"
 #include "pathbreaker.h"
+#include "idk.h"
 
+
+int GAME_WIDTH = 300;
+int GAME_HEIGHT = 900;
+
+typedef enum {
+    NONE,
+    ROCKET_LAUNCH,
+    AVALANCHE,
+    PATHBREAKER,
+    IDK
+} Game;
+Game CURRENT_GAME = NONE;
 
 void initMainMenu(){
 	SetWindowSize(300,300);
@@ -34,6 +46,11 @@ void startPathBreaker(){
 	SetWindowTitle("Path Breaker");
 	CURRENT_GAME = PATHBREAKER;
 }
+void startIdk(){
+	SetWindowSize(800,700);
+	SetWindowTitle("IDK");
+	CURRENT_GAME = IDK;
+}
 
 //ffmpeg -i rocketlaunch.wav -ac 1 -ar 22050 -b:a 32k -af silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse rocketlaunch.ogg
 
@@ -48,6 +65,7 @@ int main(void){
 	initRocketLaunch();
 	initAvalanche();
 	initPathBreaker();
+	initIdk();
     double delta = 0;
     double now = 0;
     bool needInit = false;
@@ -64,6 +82,9 @@ int main(void){
 		}
         if(IsKeyPressed(KEY_FOUR)){
 			startPathBreaker();
+		}
+        if(IsKeyPressed(KEY_FIVE)){
+			startIdk();
 		}
         now = GetTime();
         delta = now - lastTime;
@@ -83,6 +104,9 @@ int main(void){
 				break;
 			case PATHBREAKER:
 				updatePathBreaker();
+				break;
+			case IDK:
+				updateIdk();
 				break;
 		}
         EndDrawing();

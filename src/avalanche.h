@@ -9,6 +9,7 @@
 
 #define AV_GRID_WIDTH 10
 #define AV_GRID_HEIGHT 18
+#define AV_CELL_SIZE 50
 #define AV_GRID_SIZE AV_GRID_WIDTH * AV_GRID_HEIGHT 
 int avGrid[AV_GRID_SIZE] = {0};
 
@@ -166,7 +167,7 @@ static Texture2D setupAvalancheBG(const int sizeX,const int sizeY){
 	blockLandSound = LoadSound("../res/audio/blockland.ogg");
     
     ClearBackground(WHITE);
-    for (int x = 0; x <= sizeX; x += CELL_SIZE) {
+    for (int x = 0; x <= sizeX; x += AV_CELL_SIZE) {
         DrawLine(x, 0, x, sizeY, GRAY);
     }
     EndTextureMode();
@@ -265,8 +266,8 @@ void updateAvalanche(){
 	}
 	
 	Vector2 mousePos = GetMousePosition();
-	mousePos.x = ((int)mousePos.x / CELL_SIZE);
-	mousePos.y = ((int)mousePos.y / CELL_SIZE);
+	mousePos.x = ((int)mousePos.x / AV_CELL_SIZE);
+	mousePos.y = ((int)mousePos.y / AV_CELL_SIZE);
 	if(IsMouseButtonPressed(0)){
 		int mouseGrab = (int)(mousePos.y*AV_GRID_WIDTH+mousePos.x);
 		if(avGrid[mouseGrab] != 0){
@@ -304,7 +305,7 @@ void updateAvalanche(){
 		if(avGrid[i] == 0) continue;
 		int gridX = i % AV_GRID_WIDTH;
 		int gridY = i / AV_GRID_WIDTH;
-		DrawRectangle(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE, CELL_SIZE, blockColors[avGrid[i]]);
+		DrawRectangle(gridX * AV_CELL_SIZE, gridY * AV_CELL_SIZE, AV_CELL_SIZE, AV_CELL_SIZE, blockColors[avGrid[i]]);
 		//DrawRectangleLines(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE, CELL_SIZE, BLACK);
 		//DrawText(TextFormat("%i", avGrid[i]), gridX * CELL_SIZE+25, gridY * CELL_SIZE+25, 20, ORANGE);
 		//DrawText(TextFormat("%i", i), gridX * CELL_SIZE+25, gridY * CELL_SIZE+25, 20, ORANGE);
@@ -314,8 +315,8 @@ void updateAvalanche(){
 	if(mouseGridIndex != -1){
 		int x = mouseGridIndex % AV_GRID_WIDTH;
 		int y = mouseGridIndex / AV_GRID_WIDTH;
-		DrawRectangle(x*CELL_SIZE,y*CELL_SIZE, CELL_SIZE, CELL_SIZE, WHITE);
-		DrawRectangle(x*CELL_SIZE, mousePos.y*CELL_SIZE, CELL_SIZE, CELL_SIZE,blockColors[avGrid[mouseGridIndex]]);
+		DrawRectangle(x*AV_CELL_SIZE,y*AV_CELL_SIZE, AV_CELL_SIZE, AV_CELL_SIZE, WHITE);
+		DrawRectangle(x*AV_CELL_SIZE, mousePos.y*AV_CELL_SIZE, AV_CELL_SIZE, AV_CELL_SIZE,blockColors[avGrid[mouseGridIndex]]);
 		//DrawRectangle(columnIndex*CELL_SIZE, mousePos.y*CELL_SIZE, CELL_SIZE, CELL_SIZE, Fade(blockColors[avGrid[mouseGridIndex]], 0.4f));
 	}	
 	for(int i = 0; i < BLOCK_PARTICLE_CACHE_COUNT; i++){	
@@ -330,7 +331,7 @@ void updateAvalanche(){
 	}
 	
 		//DrawText(TextFormat("mousegrid %i", mouseGridIndex),20,20,20,RED);
-	DrawLine(0,850,AV_GRID_WIDTH*CELL_SIZE,850,BLACK);
+	DrawLine(0,850,AV_GRID_WIDTH*AV_CELL_SIZE,850,BLACK);
 	DrawText(TextFormat("BLOCKS: %i", blockDropCache), 30,30,20,BLACK);
 	//DrawRectangleLines(0,rowIndex*CELL_SIZE,AV_GRID_WIDTH*CELL_SIZE,CELL_SIZE,BLUE);
 }

@@ -92,6 +92,7 @@ add_executable(${PROJECT_NAME}
     src/rocketlaunch.h
     src/avalanche.h
     src/pathbreaker.h
+    src/idk.h
 )
 target_link_libraries(${PROJECT_NAME}  
     PRIVATE raylib 

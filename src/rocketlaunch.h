@@ -4,8 +4,6 @@
 #ifndef ROCKETLAUNCH_H
 #define ROCKETLAUNCH_H
 #include "raylib.h"
-#include "consts.h"
-
 
 const float ROCKET_SPEED = 500;
 const unsigned int ROCKET_DOWN = 0;
@@ -63,27 +61,29 @@ Sound rocketExplode;
 
 
 //6*18
-#define RL_GRID_WIDTH (GAME_WIDTH/CELL_SIZE)
-#define RL_GRID_HEIGHT (GAME_HEIGHT/CELL_SIZE)
+#define RL_GAME_WIDTH 300
+#define RL_GAME_HEIGHT 900
+#define RL_CELL_SIZE 50
+#define RL_GRID_WIDTH (RL_GAME_WIDTH/RL_CELL_SIZE)
+#define RL_GRID_HEIGHT (RL_GAME_HEIGHT/RL_CELL_SIZE)
 #define RL_GRID_SIZE (RL_GRID_WIDTH * RL_GRID_HEIGHT)
 int rlGrid[108]= {0};
-const int CELL_SIZE = 50;
 const int ROCKET_H_WIDTH = 25;
 const int ROCKET_H_HEIGHT = 25;
 
 //wait which one of these do i need
 Texture2D setupGrid(){
-    RenderTexture2D gridTexture = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
+    RenderTexture2D gridTexture = LoadRenderTexture(RL_GAME_WIDTH, RL_GAME_HEIGHT);
     BeginTextureMode(gridTexture);
     ClearBackground(BLANK);
-    for (int x = 0; x <= GAME_WIDTH; x += CELL_SIZE) {
-        DrawLine(x, 0, x, GAME_HEIGHT, GRAY);
+    for (int x = 0; x <= RL_GAME_WIDTH; x += RL_CELL_SIZE) {
+        DrawLine(x, 0, x, RL_GAME_HEIGHT, GRAY);
     }        
-    for (int y = 0; y <= GAME_HEIGHT; y += CELL_SIZE) {
-        DrawLine(0, y, GAME_WIDTH, y, GRAY);
+    for (int y = 0; y <= RL_GAME_HEIGHT; y += RL_CELL_SIZE) {
+        DrawLine(0, y, RL_GAME_WIDTH, y, GRAY);
     }
-    DrawLineEx((Vector2){0,(GAME_HEIGHT/2)+1},(Vector2){GAME_WIDTH,(GAME_HEIGHT/2)+1},2.0f,RED);
-    DrawLineEx((Vector2){0,(GAME_HEIGHT/2)-1},(Vector2){GAME_WIDTH,(GAME_HEIGHT/2)-1},2.0f,BLUE);
+    DrawLineEx((Vector2){0,(RL_GAME_HEIGHT/2)+1},(Vector2){RL_GAME_WIDTH,(RL_GAME_HEIGHT/2)+1},2.0f,RED);
+    DrawLineEx((Vector2){0,(RL_GAME_HEIGHT/2)-1},(Vector2){RL_GAME_WIDTH,(RL_GAME_HEIGHT/2)-1},2.0f,BLUE);
     
     EndTextureMode();
     return gridTexture.texture;
@@ -154,7 +154,7 @@ float GetRandomFloatRange(const float min, const float max) {
 //remove stars
 void setupStars(Star* stars){
     for(int i = 0; i < 100; i++){
-        stars[i].position = (Vector2){GetRandomFloatRange(0,GAME_WIDTH),GetRandomFloatRange(0,GAME_HEIGHT)};
+        stars[i].position = (Vector2){GetRandomFloatRange(0,RL_GAME_WIDTH),GetRandomFloatRange(0,RL_GAME_HEIGHT)};
         stars[i].speed = GetRandomValue(20,200);
     }
 }
@@ -242,12 +242,12 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 	if(rocketPredictHitIndex != -1 && rocket.active){
 		
 		// Calculate the base Y coordinate of the cell
-		int cellY = (rocketPredictHitIndex / RL_GRID_WIDTH) * CELL_SIZE;
+		int cellY = (rocketPredictHitIndex / RL_GRID_WIDTH) * RL_CELL_SIZE;
 		
 		// If moving DOWN (1), offset is 0. If moving UP (-1), offset is CELL_SIZE.
 		// Mathematical way: (1 - rocket.dirY) / 2 * CELL_SIZE
 		// Or more simply: (rocket.dirY == -1) ? CELL_SIZE : 0;
-		int edgeOffset = (rocket.direction == -1) ? CELL_SIZE : 0;
+		int edgeOffset = (rocket.direction == -1) ? RL_CELL_SIZE : 0;
 		int targetEdgeY = cellY + edgeOffset;
 		
 		// Use the same directional logic to trigger the hit
@@ -305,7 +305,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 				StopSound(rocketLaunch);
 				PlaySound(rocketExplode);
 			}
-			DrawRectangle(mousePos.x*50, 0,50,GAME_HEIGHT, HIGHLIGHT_COLOR);                        // Draw a color-filled rectangle
+			DrawRectangle(mousePos.x*50, 0,50,RL_GAME_HEIGHT, HIGHLIGHT_COLOR);                        // Draw a color-filled rectangle
 			break;
 		case 1:
 			
@@ -330,7 +330,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 				}
 			}
 			
-			if(rocket.active && rocket.position.y + (25*rocket.direction) >= GAME_HEIGHT){
+			if(rocket.active && rocket.position.y + (25*rocket.direction) >= RL_GAME_HEIGHT){
 				playerLives--;
 				rocketReadyToFire = true;
 				rocket.active = false;
@@ -356,7 +356,7 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 	//stars
 	for(int i = 0; i < 100; i++){
 		float newX = stars[i].position.x + (stars[i].speed * frameDelta);
-		stars[i].position.x = fmodf(newX, (float)GAME_WIDTH);
+		stars[i].position.x = fmodf(newX, (float)RL_GAME_WIDTH);
 		DrawRectangle(stars[i].position.x, stars[i].position.y, 2,2,WHITE);
 	}
 
@@ -368,13 +368,13 @@ void updateRocketLaunch(double now, double delta, float frameDelta){
 		
 		switch (rlGrid[i]){
 			case 1:
-				DrawRectangle(gridX*CELL_SIZE,gridY*CELL_SIZE, CELL_SIZE, CELL_SIZE, DEFENSE_COLOR);
+				DrawRectangle(gridX*RL_CELL_SIZE,gridY*RL_CELL_SIZE, RL_CELL_SIZE, RL_CELL_SIZE, DEFENSE_COLOR);
 				break;
 			case 2:
-				DrawRectangle(gridX*CELL_SIZE,gridY*CELL_SIZE, CELL_SIZE, CELL_SIZE, PLAYER_HIT_COLOR);
+				DrawRectangle(gridX*RL_CELL_SIZE,gridY*RL_CELL_SIZE, RL_CELL_SIZE, RL_CELL_SIZE, PLAYER_HIT_COLOR);
 				break;
 			case 3:
-				DrawRectangle(gridX*CELL_SIZE,gridY*CELL_SIZE, CELL_SIZE, CELL_SIZE, AI_HIT_COLOR);
+				DrawRectangle(gridX*RL_CELL_SIZE,gridY*RL_CELL_SIZE, RL_CELL_SIZE, RL_CELL_SIZE, AI_HIT_COLOR);
 				break;
 			default: break;
 		}
