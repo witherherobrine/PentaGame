@@ -324,7 +324,7 @@ void updateIdk(){
 			throwBallAt(i, dudes[dudes[i].targetIndex].position, &ballTest);
 		}
 		if(!dudes[i].alive) continue;
-		uint8_t af = (dudes[i].velocity.x != 0 && dudes[i].velocity.y != 0)?animFrame:0;
+		uint8_t af = (dudes[i].velocity.x != 0 || dudes[i].velocity.y != 0)?animFrame:0;
 		DrawTexturePro(dudeTex, 
 			(Rectangle){af*32,0,32,32},
 			(Rectangle){dudes[i].position.x-16,dudes[i].position.y-16,32,32},
