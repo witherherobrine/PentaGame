@@ -69,23 +69,25 @@ int main(void){
     double delta = 0;
     double now = 0;
     bool needInit = false;
+    
+	startIdk();
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-	   if(IsKeyPressed(KEY_ONE)){
-			initMainMenu();
-		}
-        if(IsKeyPressed(KEY_TWO)){
-			startRocketLaunch();
-		}
-        if(IsKeyPressed(KEY_THREE)){
-			startAvalanche();
-		}
-        if(IsKeyPressed(KEY_FOUR)){
-			startPathBreaker();
-		}
-        if(IsKeyPressed(KEY_FIVE)){
-			startIdk();
-		}
+	   //if(IsKeyPressed(KEY_ONE)){
+			//initMainMenu();
+		//}
+        //if(IsKeyPressed(KEY_TWO)){
+			//startRocketLaunch();
+		//}
+        //if(IsKeyPressed(KEY_THREE)){
+			//startAvalanche();
+		//}
+        //if(IsKeyPressed(KEY_FOUR)){
+			//startPathBreaker();
+		//}
+        //if(IsKeyPressed(KEY_FIVE)){
+			//startIdk();
+		//}
         now = GetTime();
         delta = now - lastTime;
         float frameDelta = GetFrameTime();
